@@ -216,6 +216,34 @@ function isCrossOrigin(req) {
   try { return new URL(origin).host !== host; } catch { return true; }
 }
 
+/** Whether the request is a browser navigation that wants a page back. */
+function wantsHtml(req) {
+  return String(req.headers.accept || '').includes('text/html');
+}
+
+/**
+ * Why a signed-in-from-here GET/POST was refused, in words a user can act on.
+ *
+ * The two cases need different advice, and `Origin: null` is the one that leaves
+ * people stuck: it is not a misconfiguration on their side but a property of the
+ * context the page is running in, so "reload" or "check the token" would both be
+ * useless. Only the host and the origin are named — never a token.
+ *
+ * @param {import('http').IncomingMessage} req
+ * @returns {string} one sentence naming the cause and the way out.
+ */
+function crossOriginReason(req) {
+  const origin = String(req.headers.origin || '');
+  const host = String(req.headers.host || 'this address');
+  const where = 'Open https://' + host.replace(/^https?:\/\//, '') + ' directly in a normal browser tab and sign in there.';
+  if (origin === 'null') {
+    return 'Your browser reported an opaque ("null") origin for it, which happens when the page is shown inside an '
+      + 'embedded preview, an in-app browser or a sandboxed frame — this console cannot tell that context apart from '
+      + 'another site, so it refuses it. ' + where;
+  }
+  return 'The page is on ' + origin + ' but the console is on ' + host + '. ' + where;
+}
+
 const sanitizeModelsCache = (v) => Array.isArray(v)
   ? v.filter(x => typeof x === 'string' && x.trim()).slice(0, 400).map(s => s.slice(0, 140))
   : [];
@@ -286,6 +314,19 @@ const server = http.createServer(async (req, res) => {
 
     // Any mutating verb must originate from this page. See isCrossOrigin().
     if (method !== 'GET' && method !== 'HEAD' && isCrossOrigin(req)) {
+      // A browser POSTing the sign-in FORM is navigating, not calling the API,
+      // so it gets a page that explains itself. Handing it raw JSON is how a
+      // user ended up staring at {"error":"Cross-origin request rejected"} with
+      // nothing to act on: their page was running in an opaque context, so the
+      // browser sent `Origin: null`, and no amount of re-typing the token could
+      // ever have worked. The refusal is unchanged — only the explanation is.
+      if (p === '/login' && wantsHtml(req)) {
+        res.writeHead(403, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' });
+        return res.end(auth.loginPage({
+          agentName: store.getSettings().agentName,
+          error: 'This page is not allowed to sign in. ' + crossOriginReason(req)
+        }));
+      }
       return sendJSON(res, 403, { error: 'Cross-origin request rejected' });
     }
 

@@ -108,6 +108,42 @@ async function bootServer(env) {
     const form = await request(server.port, { path: '/login' });
     check('the login form is served', form.status === 200 && /name="token"/.test(form.text));
     check('the login form is self-contained (no external assets)', !/<script[^>]+src=/.test(form.text));
+
+    // -----------------------------------------------------------------------
+    // A browser inside an embedded preview / in-app browser sends an OPAQUE
+    // origin ("null"). The refusal is correct — this console cannot tell that
+    // context apart from another site — but it used to answer the sign-in FORM
+    // with raw JSON, so the user saw {"error":"Cross-origin request rejected"}
+    // and nothing to act on. It must explain itself instead.
+    // -----------------------------------------------------------------------
+    const nullOrigin = await request(server.port, {
+      method: 'POST',
+      path: '/login',
+      body: { token: TOKEN },
+      headers: { Origin: 'null', Accept: 'text/html,application/xhtml+xml' }
+    });
+    check('an opaque-origin sign-in is still refused', nullOrigin.status === 403, `status ${nullOrigin.status}`);
+    check('but it comes back as a page, not as raw JSON',
+      /<html/i.test(nullOrigin.text) && !/"error"/.test(nullOrigin.text), nullOrigin.text.slice(0, 60));
+    check('and it names the real cause (the embedded context)',
+      /opaque/i.test(nullOrigin.text) && /normal browser tab/i.test(nullOrigin.text));
+
+    const jsonClient = await request(server.port, {
+      method: 'POST',
+      path: '/api/chats',
+      body: {},
+      headers: { Origin: 'https://evil.example' }
+    });
+    check('an API call from a foreign origin still gets JSON', jsonClient.status === 403 && /Cross-origin/.test(jsonClient.text),
+      `${jsonClient.status} ${jsonClient.text.slice(0, 40)}`);
+
+    const sameOrigin = await request(server.port, {
+      method: 'POST',
+      path: '/login',
+      body: { token: TOKEN },
+      headers: { Origin: `http://127.0.0.1:${server.port}` }
+    });
+    check('the page\u2019s own origin still signs in normally', sameOrigin.status === 302, `status ${sameOrigin.status}`);
   }
 
   // -------------------------------------------------------------------------
