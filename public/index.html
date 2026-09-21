@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>HAMA — AI Support Agent</title>
+<meta name="description" content="HAMA AI Support Agent — professional AI assistant with live web search, file creation, editing and coding, powered by any LLM provider you connect.">
+<meta name="theme-color" content="#171717">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><rect width='24' height='24' rx='5' fill='%23141414'/><path d='M8 6.5v11M16 6.5v11M8 12h8' fill='none' stroke='%23ffffff' stroke-width='2.2' stroke-linecap='round'/></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<style>/* instant dark bg before css loads to avoid flash */html[data-theme="dark"] body{background:#171717}html[data-theme="light"] body{background:#ffffff}</style>
+<link rel="stylesheet" href="styles.css?v=20260920-3">
+</head>
+<body>
+
+<!-- ======================= SVG ICON SPRITE ======================= -->
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none">
+  <symbol id="i-logo" viewBox="0 0 24 24"><path d="M7 4v16M17 4v16M7 12h10" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="2"/><path d="m16.5 16.5 5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+  <symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="M3 12h18M12 3c2.5 2.6 3.8 5.7 3.8 9S14.5 18.4 12 21c-2.5-2.6-3.8-5.7-3.8-9S9.5 5.6 12 3Z" fill="none" stroke="currentColor" stroke-width="2"/></symbol>
+  <symbol id="i-file" viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8l-5-5Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M14 3v5h5" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></symbol>
+  <symbol id="i-folder" viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></symbol>
+  <symbol id="i-file-plus" viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8l-5-5Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M14 3v5h5M12 12v6M9 15h6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-diff" viewBox="0 0 24 24"><path d="M4 7h11M11 3.5 4 7l7 3.5M4 17h11M11 13.5 4 17l7 3.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 3v12m0 0 5-5m-5 5-5-5M4 21h16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-paperclip" viewBox="0 0 24 24"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-pencil" viewBox="0 0 24 24"><path d="M17 3a2.83 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M10 11v6M14 11v6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+  <symbol id="i-gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="2"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h.01a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h.01a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v.01a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z" fill="none" stroke="currentColor" stroke-width="2"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 2v2m0 16v2M4.9 4.9l1.4 1.4m11.4 11.4 1.4 1.4M2 12h2m16 0h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></symbol>
+  <symbol id="i-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" fill="none" stroke="currentColor" stroke-width="2"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-chevron" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-close" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+  <symbol id="i-send" viewBox="0 0 24 24"><path d="M12 19V5m-7 7 7-7 7 7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-stop" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2" fill="currentColor"/></symbol>
+  <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-2.64-6.36M21 3v6h-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="2"/></symbol>
+  <symbol id="i-eyeoff" viewBox="0 0 24 24"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 19c-6.5 0-10-7-10-7a17.6 17.6 0 0 1 4.06-4.94M9.9 4.24A9.12 9.12 0 0 1 12 5c6.5 0 10 7 10 7a17.7 17.7 0 0 1-2.16 3.19M14.12 14.12a3 3 0 1 1-4.24-4.24M2 2l20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+  <symbol id="i-code" viewBox="0 0 24 24"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-bolt" viewBox="0 0 24 24"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></symbol>
+  <symbol id="i-chat" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-5 5V5a2 2 0 0 1 2-2h15a2 2 0 0 1 2 2v10Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></symbol>
+  <symbol id="i-key" viewBox="0 0 24 24"><circle cx="7.5" cy="15.5" r="4.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="m11 12 10-10m-4 4 3 3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+  <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 21v-7m0-4V3m8 18v-9m0-4V3m8 18v-5m0-4V3M1 14h6M9 8h6m-8 8h6m4-8h6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+  <symbol id="i-panel" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M15 4v16" stroke="currentColor" stroke-width="2"/></symbol>
+  <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+  <symbol id="i-arrow-l" viewBox="0 0 24 24"><path d="M19 12H5m7 7-7-7 7-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-tool" viewBox="0 0 24 24"><path d="M14.7 6.3a4.5 4.5 0 0 0-6 6L3 18l3 3 5.7-5.7a4.5 4.5 0 0 0 6-6L14 13l-3-3 3.7-3.7Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></symbol>
+  <symbol id="i-external" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6m4-3h6v6m-11 5L21 3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-sparkle" viewBox="0 0 24 24"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3L12 3Z" fill="currentColor"/></symbol>
+  <symbol id="i-workflow" viewBox="0 0 24 24"><circle cx="5" cy="6" r="3" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="18" r="3" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="19" cy="6" r="3" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 9v3a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V9M12 15v-3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+  <symbol id="i-brain" viewBox="0 0 24 24"><path d="M9.5 2A4.5 4.5 0 0 0 5 6.5c0 .4.05.78.14 1.15A4.5 4.5 0 0 0 3 11.5c0 1.7 1 3.19 2.44 3.93A4.5 4.5 0 0 0 10 19.5h.5M14.5 2A4.5 4.5 0 0 1 19 6.5c0 .4-.05.78-.14 1.15A4.5 4.5 0 0 1 21 11.5c0 1.7-1 3.19-2.44 3.93A4.5 4.5 0 0 1 14 19.5h-.5M12 4v16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+  <symbol id="i-checklist" viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11M4 6l1 1 2-2M4 12l1 1 2-2M4 18l1 1 2-2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-verified" viewBox="0 0 24 24"><path d="M12 2l3.09 2.22 3.79-.37 1.8 3.35 3.35 1.8-.37 3.79L22 12l-2.22 3.09.37 3.79-3.35 1.8-1.8 3.35-3.79-.37L12 22l-3.09-2.22-3.79.37-1.8-3.35-3.35-1.8.37-3.79L2 12l2.22-3.09-.37-3.79 3.35-1.8 1.8-3.35 3.79.37L12 2z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="m9 12 2 2 4-4" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-report" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><polyline points="14 2 14 8 20 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><line x1="16" y1="13" x2="8" y2="13" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><line x1="16" y1="17" x2="8" y2="17" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><polyline points="10 9 9 9 8 9" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+  <symbol id="i-terminal" viewBox="0 0 24 24"><polyline points="4 17 10 11 4 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><line x1="12" y1="19" x2="20" y2="19" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24"><polygon points="6 4 19 12 6 20 6 4" fill="currentColor"/></symbol>
+  <symbol id="i-code-bracket" viewBox="0 0 24 24"><polyline points="16 18 22 12 16 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><polyline points="8 6 2 12 8 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+</svg>
+
+<div id="app">
+
+  <!-- ======================= SIDEBAR ======================= -->
+  <aside class="sidebar" id="sidebar">
+    <div class="side-brand">
+      <div class="brand-orb"><svg><use href="#i-logo"/></svg></div>
+      <div class="brand-text">
+        <div class="brand-name" id="brandName">HAMA</div>
+        <div class="brand-sub">AI Support Agent</div>
+      </div>
+    </div>
+
+    <button class="side-new" id="newChatBtn">
+      <svg class="ic"><use href="#i-plus"/></svg><span>New chat</span>
+    </button>
+
+    <div class="side-search">
+      <svg class="ic"><use href="#i-search"/></svg>
+      <input type="text" id="chatSearch" placeholder="Search conversations…" autocomplete="off">
+    </div>
+
+    <div class="tag-filter-bar hidden" id="tagFilterBar"></div>
+
+    <nav class="chat-list" id="chatList"></nav>
+
+    <div class="side-footer">
+      <button class="side-foot-btn" id="providersBtn" title="Manage providers">
+        <svg class="ic"><use href="#i-key"/></svg><span>Providers</span>
+      </button>
+      <button class="icon-btn" id="settingsBtn" title="Settings"><svg class="ic"><use href="#i-gear"/></svg></button>
+      <button class="icon-btn" id="themeBtn" title="Toggle theme"><svg class="ic" id="themeIcon"><use href="#i-sun"/></svg></button>
+    </div>
+  </aside>
+  <div class="side-overlay" id="sideOverlay"></div>
+
+  <!-- ======================= MAIN ======================= -->
+  <main class="main">
+    <header class="topbar">
+      <button class="icon-btn menu-btn" id="menuBtn"><svg class="ic"><use href="#i-menu"/></svg></button>
+      <button class="icon-btn" id="topNewChatBtn" title="New chat (Ctrl+N)"><svg class="ic"><use href="#i-plus"/></svg></button>
+      <div class="top-title" id="topTitle">New conversation</div>
+      <div class="top-spacer"></div>
+
+      <div class="provider-wrap">
+        <button class="provider-pill" id="providerPill">
+          <span class="prov-avatar" id="ppAvatar">A</span>
+          <span class="pp-text">
+            <span class="pp-name" id="ppName">Provider</span>
+          </span>
+          <svg class="ic caret"><use href="#i-chevron"/></svg>
+        </button>
+        <div class="prov-menu hidden" id="provMenu"></div>
+      </div>
+
+      <button class="icon-btn" id="filesToggle" title="Workspace files"><svg class="ic"><use href="#i-panel"/></svg></button>
+    </header>
+
+    <div class="chat-scroll" id="chatScroll">
+      <div class="chat-inner" id="chatInner">
+        <!-- Welcome hero -->
+        <div class="welcome" id="welcome">
+          <div class="orb-wrap"><div class="orb"></div><div class="orb-ring"></div></div>
+          <h1 id="welcomeTitle">How can I help you today?</h1>
+          <p id="welcomeSub">Your professional AI support agent — live web search, file creation, editing and coding, powered by any provider you connect.</p>
+        </div>
+        <div id="messages"></div>
+      </div>
+    </div>
+
+    <div class="composer-wrap">
+      <div class="composer">
+        <textarea id="composer" rows="1" placeholder="Message HAMA…"></textarea>
+        <div class="attach-row hidden" id="attachRow"></div>
+        <div class="composer-row">
+          <!--
+            Provider + model switcher.
+
+            Both carry their NAME, including on a phone: the model chip used to
+            lose its label below 860px (`.chip span { display: none }`) and the
+            topbar provider pill lost its text below 480px, so on mobile the
+            console gave no way to see — let alone change — which provider and
+            model a reply would come from.
+          -->
+          <div class="model-select-wrap mobile-only" id="composerProvWrap">
+            <button type="button" class="chip provider-chip" id="composerProvBtn" title="Switch provider">
+              <span class="prov-avatar" id="composerProvAvatar">A</span>
+              <span class="chip-label provider-chip-name" id="composerProvName">Provider</span>
+              <svg class="ic caret"><use href="#i-chevron"/></svg>
+            </button>
+            <div class="model-dropdown hidden" id="composerProvDropdown"></div>
+          </div>
+
+          <!-- Chatbox Model Switcher -->
+          <div class="model-select-wrap" id="modelSelectWrap">
+            <button type="button" class="chip model-chip" id="composerModelBtn" title="Switch AI model">
+              <svg class="ic spark-ic"><use href="#i-sparkle"/></svg>
+              <span class="model-chip-name" id="composerModelName">Model</span>
+              <svg class="ic caret"><use href="#i-chevron"/></svg>
+            </button>
+            <div class="model-dropdown hidden" id="composerModelDropdown"></div>
+          </div>
+
+          <!--
+            The per-conversation tool toggles (Web search / File tools / App
+            engine) used to sit here. They are gone from the composer: three
+            always-on switches that had to be right before every send were
+            clutter, and turning one off was almost never the intent. Tools are
+            still fully controllable where the decision belongs — per provider
+            (Providers → Configure → Agent tools enabled) — and a conversation
+            runs as an agent whenever its provider allows it.
+          -->
+          <button class="icon-btn" id="attachBtn" title="Attach a file or image"><svg class="ic"><use href="#i-paperclip"/></svg></button>
+          <div class="spacer"></div>
+          <span class="hint hidden" id="streamHint">working…</span>
+          <button class="send-btn" id="sendBtn" title="Send"><svg class="ic"><use href="#i-send"/></svg></button>
+          <button class="stop-btn hidden" id="stopBtn" title="Stop generating"><svg class="ic"><use href="#i-stop"/></svg></button>
+        </div>
+      </div>
+      <input type="file" id="fileInput" multiple hidden>
+      <div class="composer-note" id="composerNote">AI can make mistakes. Verify important information.</div>
+    </div>
+  </main>
+
+  <!-- ======================= FILES PANEL ======================= -->
+  <!-- The scrim is what makes the panel dismissable on a phone: it is a
+       full-height overlay there, and the only other way out is the header. -->
+  <div class="fp-scrim" id="fpScrim"></div>
+  <aside class="files-panel" id="filesPanel">
+    <div class="fp-head">
+      <div class="fp-title"><svg class="ic"><use href="#i-folder"/></svg><span>Workspace</span></div>
+      <div class="fp-actions">
+        <button class="icon-btn sm" id="fpRefresh" title="Refresh"><svg class="ic"><use href="#i-refresh"/></svg></button>
+        <button class="icon-btn sm" id="fpClose" title="Close"><svg class="ic"><use href="#i-close"/></svg></button>
+      </div>
+    </div>
+    <div class="fp-crumbs" id="fpCrumbs"></div>
+    <div class="fp-list" id="fpList"></div>
+    <div class="fp-foot">Files the agent creates &amp; edits appear here.</div>
+  </aside>
+</div>
+
+<!-- ======================= PROVIDERS MODAL ======================= -->
+<div class="modal-backdrop hidden" id="providerModal">
+  <div class="modal modal-lg">
+    <div class="modal-head">
+      <div class="modal-title"><svg class="ic"><use href="#i-key"/></svg><span id="provModalTitle">Providers</span></div>
+      <button class="icon-btn" data-close="providerModal"><svg class="ic"><use href="#i-close"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <!-- List view -->
+      <div id="provListView">
+        <div class="prov-list" id="provList"></div>
+        <button class="btn primary wide" id="addProviderBtn"><svg class="ic"><use href="#i-plus"/></svg><span>Add provider</span></button>
+      </div>
+
+      <!-- Form view -->
+      <div id="provFormView" class="hidden">
+        <button class="btn ghost sm" id="provBackBtn"><svg class="ic"><use href="#i-arrow-l"/></svg><span>Back to list</span></button>
+
+        <div class="field">
+          <label>Provider preset</label>
+          <div class="preset-grid" id="presetGrid"></div>
+        </div>
+
+        <div class="field"><label>Display name</label><input class="input" id="fName" placeholder="e.g. My OpenAI"></div>
+
+        <div class="field">
+          <label>API key <span class="muted" id="keyHint"></span></label>
+          <div class="key-row">
+            <input class="input mono" id="fKey" type="password" placeholder="sk-…" autocomplete="off">
+            <button class="icon-btn" id="keyPeek" title="Show / hide key"><svg class="ic"><use href="#i-eye"/></svg></button>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class="field"><label>Base URL</label><input class="input mono" id="fBase" placeholder="https://api.openai.com/v1"></div>
+          <div class="field">
+            <label>Model</label>
+            <div class="key-row">
+              <input class="input mono" id="fModel" placeholder="model id">
+              <button class="btn ghost sm" id="fetchModelsBtn" title="Fetch available models from the provider">Fetch</button>
+            </div>
+            <div class="model-picker hidden" id="modelPicker">
+              <div class="mp-head">
+                <svg class="ic"><use href="#i-search"/></svg>
+                <input type="text" id="mpSearch" placeholder="Filter models…" autocomplete="off">
+                <span class="mp-count" id="mpCount"></span>
+              </div>
+              <div class="mp-list" id="mpList"></div>
+              <div class="mp-note hidden" id="mpNote">⚠ The current model id is not in the fetched list — pick one below to avoid errors.</div>
+            </div>
+            <div class="check-row">
+              <button class="btn ghost sm" id="checkModelsBtn" title="Send a tiny live test to each model, including a tool-call check">Check models</button>
+              <span class="muted small" id="checkModelsNote">Verify every model actually answers.</span>
+            </div>
+            <div class="model-check hidden" id="checkModelsResults"></div>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class="field">
+            <label>Temperature <span class="muted" id="tempVal">0.7</span></label>
+            <input type="range" id="fTemp" min="0" max="2" step="0.05" value="0.7">
+          </div>
+          <div class="field"><label>Max tokens <span class="muted">(blank = provider default)</span></label><input class="input" id="fMaxTokens" type="number" min="1" placeholder="4096"></div>
+        </div>
+
+        <div class="field">
+          <label>Custom rules for this provider <span class="muted">— the agent must follow these</span></label>
+          <textarea class="input mono" id="fRules" rows="5" placeholder="e.g. Always answer in English. Keep replies under 200 words unless asked for detail. Sign every reply with '— HAMA Support'. Never discuss competitors…"></textarea>
+          <div class="muted small">Injected into the system prompt for every conversation using this provider.</div>
+        </div>
+
+        <div class="switch-row">
+          <label class="switch"><input type="checkbox" id="fTools" checked><span class="track"></span></label>
+          <div><div class="switch-label">Agent tools enabled</div><div class="muted small">Web search &amp; workspace file tools for this provider</div></div>
+          <div class="spacer"></div>
+          <label class="switch"><input type="checkbox" id="fEnabled" checked><span class="track"></span></label>
+          <div><div class="switch-label">Enabled</div><div class="muted small">Available to chat with</div></div>
+        </div>
+
+        <div class="form-actions">
+          <button class="btn ghost" id="testProviderBtn"><svg class="ic"><use href="#i-bolt"/></svg><span>Test connection</span></button>
+          <div class="spacer"></div>
+          <button class="btn danger ghost" id="deleteProviderBtn"><svg class="ic"><use href="#i-trash"/></svg><span>Delete</span></button>
+          <button class="btn primary" id="saveProviderBtn"><svg class="ic"><use href="#i-check"/></svg><span>Save provider</span></button>
+        </div>
+        <div class="muted small" id="provFormNote"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ======================= SETTINGS MODAL ======================= -->
+<div class="modal-backdrop hidden" id="settingsModal">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title"><svg class="ic"><use href="#i-gear"/></svg><span>Settings</span></div>
+      <button class="icon-btn" data-close="settingsModal"><svg class="ic"><use href="#i-close"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <div class="field"><label>Agent name</label><input class="input" id="sAgentName" placeholder="HAMA"></div>
+      <div class="field">
+        <label>Default provider</label>
+        <select class="input" id="sDefaultProvider"></select>
+      </div>
+      <div class="field">
+        <div class="field-head">
+          <label>Global rules <span class="muted">— applied to every provider</span></label>
+          <button type="button" class="mini-link hidden" id="resetGlobalRulesBtn">Reset to default</button>
+        </div>
+        <textarea class="input mono" id="sGlobalRules" rows="4" placeholder="e.g. Be concise. Always show sources. The current project is a Node.js helpdesk app…"></textarea>
+        <div class="field-note" id="sGlobalRulesNote"></div>
+      </div>
+
+      <div class="settings-section-title"><svg class="ic"><use href="#i-workflow"/></svg> Agent &amp; team</div>
+      <div class="field">
+        <label>Collaboration mode</label>
+        <select class="input" id="sAgentMode">
+          <option value="auto">Auto — team up on big projects, answer simply otherwise</option>
+          <option value="crew">Always collaborate — every request uses the full team</option>
+          <option value="solo">Solo — a single model handles every request</option>
+        </select>
+      </div>
+      <div class="switch-row" style="padding:4px 0 6px">
+        <label class="switch"><input type="checkbox" id="sCrewEnabled" checked><span class="track"></span></label>
+        <div><div class="switch-label">Multi-model team</div><div class="muted small">Let enabled models review and improve each other's work with shared memory</div></div>
+      </div>
+      <div class="field">
+        <label>Team size <span class="muted">— extra models per project</span></label>
+        <select class="input" id="sCrewSize">
+          <option value="1">1 extra model</option>
+          <option value="2">2 extra models</option>
+          <option value="3">3 extra models</option>
+          <option value="4">4 extra models</option>
+        </select>
+      </div>
+
+      <div class="muted small" style="margin-bottom:16px">API keys &amp; data are stored locally in <span class="mono">data/providers.json</span> inside this app folder — nothing leaves this machine except calls to your chosen providers.</div>
+      <div class="form-actions">
+        <button class="btn danger ghost" id="clearChatsBtn"><svg class="ic"><use href="#i-trash"/></svg><span>Clear all chats</span></button>
+        <div class="spacer"></div>
+        <button class="btn primary" id="saveSettingsBtn"><svg class="ic"><use href="#i-check"/></svg><span>Save settings</span></button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ======================= FILE VIEWER MODAL ======================= -->
+<div class="modal-backdrop hidden" id="fileViewerModal">
+  <div class="modal modal-lg">
+    <div class="modal-head">
+      <div class="modal-title"><svg class="ic"><use href="#i-file"/></svg><span class="mono" id="fvTitle">file</span></div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <button class="btn ghost sm" id="fvPreview" style="display:none"><svg class="ic"><use href="#i-eye"/></svg><span>Preview</span></button>
+        <button class="btn ghost sm" id="fvCopy"><svg class="ic"><use href="#i-copy"/></svg><span>Copy</span></button>
+        <button class="icon-btn" data-close="fileViewerModal"><svg class="ic"><use href="#i-close"/></svg></button>
+      </div>
+    </div>
+    <div class="modal-body no-pad"><pre class="fv-pre" id="fvContent"></pre></div>
+  </div>
+</div>
+
+<!-- ======================= UNIVERSAL SANDBOX MODAL ======================= -->
+<div class="modal-backdrop hidden" id="appPreviewModal">
+  <div class="preview-modal-window">
+    <div class="preview-modal-head">
+      <div class="pm-title-wrap">
+        <div class="apc-orb" style="width:32px;height:32px;border-radius:9px"><svg class="ic" style="width:16px;height:16px"><use href="#i-eye"/></svg></div>
+        <div class="pm-title-group">
+          <div class="pm-title" id="pmTitle">HAMA Sandbox</div>
+          <div class="pm-sub mono" id="pmSub">workspace</div>
+        </div>
+      </div>
+
+      <!-- Sandbox Tabs -->
+      <div class="sb-nav-tabs" id="sbNavTabs">
+        <button class="sb-tab-btn active" id="sbTabWeb" data-tab="web" title="Live Web App Preview">
+          <svg class="ic"><use href="#i-globe"/></svg><span>Live App</span>
+        </button>
+        <button class="sb-tab-btn" id="sbTabCode" data-tab="code" title="View Project Code Files">
+          <svg class="ic"><use href="#i-code"/></svg><span>Code Files</span><span class="sb-badge" id="sbCodeBadge">0</span>
+        </button>
+        <button class="sb-tab-btn" id="sbTabTerminal" data-tab="terminal" title="Python / Node.js Console Runner">
+          <svg class="ic"><use href="#i-terminal"/></svg><span>Terminal</span><span class="sb-status-dot" id="sbTermDot"></span>
+        </button>
+        <button class="sb-tab-btn" id="sbTabMarkdown" data-tab="markdown" title="Rendered Markdown Document">
+          <svg class="ic"><use href="#i-file"/></svg><span>Markdown</span>
+        </button>
+      </div>
+
+      <!-- Device Switcher (active on Web Preview) -->
+      <div class="pm-devices" id="pmDeviceControls">
+        <button class="pm-dev-btn active" id="pmDevDesktop" data-device="desktop" title="Desktop view (100%)">
+          <svg class="ic"><use href="#i-panel"/></svg><span>Desktop</span>
+        </button>
+        <button class="pm-dev-btn" id="pmDevTablet" data-device="tablet" title="Tablet view (768px)">
+          <svg class="ic"><use href="#i-menu"/></svg><span>Tablet</span>
+        </button>
+        <button class="pm-dev-btn" id="pmDevMobile" data-device="mobile" title="Mobile view (390px)">
+          <svg class="ic"><use href="#i-chat"/></svg><span>Mobile</span>
+        </button>
+      </div>
+
+      <!-- Terminal Action Controls (active on Terminal Tab) -->
+      <div class="pm-terminal-controls hidden" id="pmTerminalControls">
+        <button class="btn btn-sm primary" id="pmRunBtn" title="Execute script in workspace">
+          <svg class="ic"><use href="#i-play"/></svg><span>Run Script</span>
+        </button>
+        <button class="icon-btn" id="pmTermClearBtn" title="Clear console output">
+          <svg class="ic"><use href="#i-trash"/></svg>
+        </button>
+      </div>
+
+      <!-- Common Top Right Actions -->
+      <div class="pm-actions">
+        <button class="icon-btn" id="pmRefresh" title="Reload preview"><svg class="ic"><use href="#i-refresh"/></svg></button>
+        <button class="icon-btn" id="pmPopout" title="Open in new window"><svg class="ic"><use href="#i-external"/></svg></button>
+        <button class="icon-btn" data-close="appPreviewModal" title="Close"><svg class="ic"><use href="#i-close"/></svg></button>
+      </div>
+    </div>
+
+    <!-- Multi-View Body -->
+    <div class="preview-modal-body">
+      <!-- 1. Live Web App Preview -->
+      <div class="sb-view" id="pmViewWeb">
+        <div class="preview-viewport-wrap">
+          <div class="preview-device-frame" id="pmFrameWrap">
+            <!--
+              `allow-same-origin` is deliberately ABSENT. With it, model-generated
+              HTML in this frame shares the console's origin and can call the API
+              (which has no authentication): read other conversations, delete
+              them, POST /api/run. Without it the frame is an opaque origin — its
+              scripts, forms and modals still work, but it cannot touch this app.
+            -->
+            <iframe id="pmIframe" sandbox="allow-scripts allow-modals allow-forms" src="about:blank"></iframe>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. Code Files Explorer & Viewer -->
+      <div class="sb-view hidden" id="pmViewCode">
+        <div class="sb-code-container">
+          <div class="sb-code-header">
+            <div class="sb-file-pills" id="sbCodeFilePills"></div>
+            <div class="sb-code-actions">
+              <span class="sb-file-meta mono" id="sbCodeMeta"></span>
+              <button class="btn btn-xs" id="sbCodeCopyBtn">
+                <svg class="ic"><use href="#i-copy"/></svg><span>Copy Code</span>
+              </button>
+            </div>
+          </div>
+          <div class="sb-code-body">
+            <pre class="sb-code-pre" id="sbCodePre"><code id="sbCodeContent">// Select a file above to inspect its code</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. Terminal Console Runner -->
+      <div class="sb-view hidden" id="pmViewTerminal">
+        <div class="sb-terminal-container">
+          <div class="terminal-bar">
+            <div class="terminal-dots">
+              <span class="td-dot red"></span>
+              <span class="td-dot yellow"></span>
+              <span class="td-dot green"></span>
+            </div>
+            <div class="terminal-title mono" id="pmTermTitle">workspace &gt; console</div>
+            <div class="terminal-status">
+              <span class="term-status-badge idle" id="pmTermStatus">READY</span>
+            </div>
+          </div>
+          <div class="terminal-body" id="pmTerminalBody">
+            <div class="term-prompt-info" id="pmTermInfo">
+              <div class="term-target-row">
+                <span class="term-lbl">Script:</span>
+                <select id="pmScriptSelect" class="term-script-select"></select>
+                <span class="term-dur mono" id="pmTermDur"></span>
+              </div>
+            </div>
+            <pre class="terminal-pre mono" id="pmTerminalPre"><span class="term-comment">// Python and Node.js script output runner</span>
+<span class="term-comment">// Select a script and click [Run Script] or let HAMA execute it directly.</span></pre>
+          </div>
+        </div>
+      </div>
+
+      <!-- 4. Rendered Markdown Document View -->
+      <div class="sb-view hidden" id="pmViewMarkdown">
+        <div class="sb-markdown-container" id="pmMarkdownContainer">
+          <div class="markdown-body" id="pmMarkdownBody"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ======================= KEYBOARD SHORTCUTS MODAL ======================= -->
+<div class="modal-backdrop hidden" id="shortcutsModal">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title"><svg class="ic"><use href="#i-checklist"/></svg><span>Keyboard Shortcuts</span></div>
+      <button class="icon-btn" data-close="shortcutsModal"><svg class="ic"><use href="#i-close"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <div class="shortcut-grid" id="shortcutGrid"></div>
+    </div>
+  </div>
+</div>
+
+<div class="toasts" id="toasts"></div>
+
+<script src="markdown.js?v=20260920-3"></script>
+<script src="ansi.js?v=20260920-1"></script>
+<script src="agent-rows.js?v=20260920-5"></script>
+<script src="app.js?v=20260920-4"></script>
+</body>
+</html>

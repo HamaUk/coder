@@ -1,0 +1,22 @@
+{
+  "name": "hama-support-agent",
+  "version": "1.0.0",
+  "private": true,
+  "description": "HAMA — professional multi-provider AI support agent console",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "test": "node test_multi_files.js && node test_surgical_edit.js && node .smoke/loop.test.js && node .smoke/preview.test.js && node .smoke/ui.test.js && node .smoke/client-wiring.test.js && node .smoke/mobile.test.js && node .smoke/attach.test.js && node .smoke/prompt.test.js && node .smoke/markdown.test.js && node .smoke/ansi.test.js && node .smoke/hardening.test.js && node .smoke/provider.test.js && node .smoke/dsml.test.js && node .smoke/shell.test.js && node .smoke/stream.test.js && node .smoke/recorded-loop.test.js && node .smoke/substance.test.js && node .smoke/persistence.test.js && node .smoke/auth.test.js && node .smoke/deploy.test.js && node .smoke/env-provider.test.js",
+    "test:e2e": "node .smoke/smoke.js",
+    "check:models": "node scripts/check-models.js",
+    "verify:agent": "node scripts/verify-agent.js",
+    "verify:deploy": "node scripts/verify-deploy.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "esbuild": "^0.28.2"
+  }
+}

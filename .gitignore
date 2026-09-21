@@ -1,0 +1,27 @@
+# Never commit state or secrets.
+#
+# `data/` holds providers.json (API keys), chats.json (every conversation) and
+# settings.json. `workspace/` holds whatever the agent has written. Both are the
+# operator's own data, both are machine-specific, and providers.json alone is
+# enough to spend someone's API quota.
+data/
+workspace/
+tool-rejects.log
+last-rejected-files.json
+
+# Test scratch: suites write into these and they change on every run.
+.smoke/data/
+.smoke/workspace/
+.smoke/workspace-*/
+
+node_modules/
+npm-debug.log*
+*.log
+
+# Editor / OS noise
+.vscode/
+.idea/
+.claude/
+.kilo/
+.DS_Store
+Thumbs.db

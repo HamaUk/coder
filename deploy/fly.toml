@@ -1,0 +1,56 @@
+# Fly.io configuration for HAMA.
+#
+# Copy this file to the repository root (`fly.toml`) and set a unique `app` name
+# before `fly launch`. Fly is the only one of the free-ish hosts that can attach a
+# real disk, which is what makes chats, providers and generated files survive a
+# restart — everything else loses them.
+app = "hama-console-CHANGE-ME"
+primary_region = "iad"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  HOST = "0.0.0.0"
+  PORT = "3000"
+  HAMA_DATA_DIR = "/app/data"
+  HAMA_WORKSPACE_DIR = "/app/workspace"
+
+# One small machine. `min_machines_running = 1` keeps it always on, which is what
+# "24/7" means here — with 0 Fly suspends it and the first request pays a cold
+# start. Set it to 0 if you would rather have the cheaper suspended behaviour.
+[http_service]
+  internal_port = 3000
+  force_https = true
+  auto_stop_machines = "suspend"
+  auto_start_machines = true
+  min_machines_running = 1
+
+  # A turn streams over SSE for as long as the model works. The default proxy
+  # timeout would cut a long tool call off mid-answer.
+  [http_service.concurrency]
+    type = "connections"
+    hard_limit = 60
+    soft_limit = 40
+
+[[http_service.checks]]
+  interval = "30s"
+  timeout = "5s"
+  grace_period = "20s"
+  method = "GET"
+  path = "/api/health"
+
+# Persistent storage. Both the data directory and the workspace live here, so a
+# volume is what separates this from a demo that forgets everything.
+# (`[[mounts]]` is an array of tables — two plain `[mounts]` headers are invalid
+# TOML and `fly deploy` rejects the file.)
+[[mounts]]
+  source = "hama_state"
+  destination = "/app/data"
+
+[[mounts]]
+  source = "hama_workspace"
+  destination = "/app/workspace"
+
+# HAMA_TOKEN must be set as a secret, not here:
+#   fly secrets set HAMA_TOKEN="a-long-random-secret"

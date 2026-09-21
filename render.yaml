@@ -1,0 +1,59 @@
+# Render Blueprint — HAMA.
+#
+# AT THE REPO ROOT ON PURPOSE: a Render Blueprint only reads `render.yaml` from
+# the root of the repository. It used to live in `deploy/`, which meant the file
+# had to be moved by hand before "New → Blueprint" would find it — a step that is
+# easy to miss and impossible to debug from the error Render gives you.
+#
+# WHAT TO EXPECT FROM THE FREE PLAN (read this before you click deploy):
+#   * The service SLEEPS after a period of inactivity and the next request pays a
+#     cold start of roughly a minute. Long agent turns hold the connection open,
+#     so a turn in progress is not "inactive" — but the first request after a
+#     quiet spell is slow.
+#   * There is NO PERSISTENT DISK on the free plan. `data/` (provider keys, chats)
+#     and `workspace/` (generated files) live inside the container and reset on
+#     every redeploy, restart and wake. That is fine for trying the app out and
+#     wrong for anything you want to keep — the README compares the hosts that do
+#     give you a disk.
+#   * Because the disk resets, the provider you add in the UI disappears on the
+#     next restart. Set HAMA_PROVIDER_* below and it is re-added at every boot
+#     (src/env-provider.js, additive only — it never touches a provider you
+#     configured yourself).
+services:
+  - type: web
+    name: hama-console
+    runtime: node
+    plan: free
+    region: oregon
+    buildCommand: npm ci --omit=dev
+    startCommand: node server.js
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      # The container platform decides the port; the app reads PORT.
+      - key: HOST
+        value: 0.0.0.0
+      # REQUIRED. Without it the server REFUSES to bind a public interface and
+      # exits — deliberately, because this console can run shell commands and
+      # shows stored API keys. `sync: false` makes Render prompt for the value
+      # instead of storing it here. Something long and random, e.g.
+      #   node -e "console.log(require('crypto').randomBytes(24).toString('hex'))"
+      - key: HAMA_TOKEN
+        sync: false
+
+      # ---------------------------------------------------------------------
+      # Optional: a provider that is re-created on every boot.
+      #
+      # Only needed because the free plan has no disk. Leave these commented out
+      # if you would rather add your provider in the UI each time.
+      # ---------------------------------------------------------------------
+      # - key: HAMA_PROVIDER_PRESET      # openrouter | openai | groq | deepseek | google | anthropic …
+      #   value: openrouter
+      # - key: HAMA_PROVIDER_KEY         # sync:false keeps the key out of git; Render prompts for it
+      #   sync: false
+      # - key: HAMA_PROVIDER_MODEL       # defaults to the preset's model
+      #   value: openai/gpt-4o-mini
+      # - key: HAMA_PROVIDER_BASE_URL    # only for a custom/OpenAI-compatible endpoint
+      #   value: https://openrouter.ai/api/v1

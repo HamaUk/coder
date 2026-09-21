@@ -1,0 +1,20 @@
+# What never belongs in the image.
+#
+# `data/` and `workspace/` hold the OPERATOR'S state — provider API keys, chat
+# history, generated files. Copying them into an image would bake secrets into a
+# layer that gets pushed to a registry and pulled onto a host.
+node_modules
+data
+workspace
+.smoke
+.git
+.gitignore
+
+# Editor and agent scratch that has nothing to do with running the server.
+.claude
+.kilo
+.vscode
+*.log
+*.tmp
+Dockerfile
+.dockerignore
