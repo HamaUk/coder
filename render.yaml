@@ -30,8 +30,10 @@ services:
     healthCheckPath: /api/health
     autoDeploy: true
     envVars:
+      # Node 20 LTS: the newest version Render documents as supported, and the
+      # app needs nothing newer than 18 (see "engines" in package.json).
       - key: NODE_VERSION
-        value: "22"
+        value: "20"
       # The container platform decides the port; the app reads PORT.
       - key: HOST
         value: 0.0.0.0
