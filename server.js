@@ -157,7 +157,18 @@ function readBody(req, limit = 25 * 1024 * 1024) {
     });
     req.on('end', () => {
       if (!chunks.length) return resolve({});
-      try { resolve(JSON.parse(Buffer.concat(chunks).toString('utf8'))); }
+      const raw = Buffer.concat(chunks).toString('utf8');
+      // A native <form> POST — which is exactly what the sign-in page is — sends
+      // `application/x-www-form-urlencoded`, never JSON. Parsing only JSON meant
+      // the login form could not be submitted from a browser at all: the body
+      // threw, the route answered 500 "Invalid JSON body", and no token could
+      // ever be accepted. Every API client here posts JSON, so nothing caught it.
+      const type = String(req.headers['content-type'] || '').split(';')[0].trim().toLowerCase();
+      if (type === 'application/x-www-form-urlencoded') {
+        try { return resolve(Object.fromEntries(new URLSearchParams(raw))); }
+        catch { return reject(new Error('Malformed form body')); }
+      }
+      try { resolve(JSON.parse(raw)); }
       catch { reject(new Error('Invalid JSON body')); }
     });
     req.on('error', reject);
@@ -209,6 +220,16 @@ const safeProviderView = (p) => {
  * allowed through, since a browser always sends one on a cross-origin POST.
  */
 function isCrossOrigin(req) {
+  // `Sec-Fetch-Site` is a forbidden header name: only the browser sets it and no
+  // page can forge it. When the browser itself states that a request is
+  // same-origin, that settles the question — including for a request whose
+  // `Origin` header was rewritten to "null" by a referrer policy, which is how
+  // the sign-in form came to be refused. A cross-site page cannot claim
+  // `same-origin`; its requests arrive as `cross-site` and fall through to the
+  // check below.
+  const site = String(req.headers['sec-fetch-site'] || '').toLowerCase();
+  if (site === 'same-origin') return false;
+
   const origin = req.headers.origin;
   if (!origin) return false;
   const host = req.headers.host;
@@ -310,7 +331,20 @@ const server = http.createServer(async (req, res) => {
     // Cheap hardening on every response. No framing header: the Live App
     // preview legitimately frames this server's own workspace route.
     res.setHeader('X-Content-Type-Options', 'nosniff');
-    res.setHeader('Referrer-Policy', 'no-referrer');
+    // `same-origin`, NOT `no-referrer`.
+    //
+    // `no-referrer` does a second, non-obvious thing: on any request the page
+    // makes that is not a CORS request, the browser rewrites the `Origin` header
+    // to the literal string "null" (that is the Fetch standard's rule for a
+    // non-CORS request from a document with this policy). A native <form> POST —
+    // the sign-in page — is exactly such a request, so the browser sent
+    // `Origin: null` and the CSRF guard below refused the console's own login
+    // form. Sign-in from a real browser could never work; every curl and API
+    // test passed because they set `Origin` (or omitted it) by hand.
+    //
+    // `same-origin` keeps the intent — a referrer is never sent to another
+    // origin — while leaving `Origin` intact for same-origin requests.
+    res.setHeader('Referrer-Policy', 'same-origin');
 
     // Any mutating verb must originate from this page. See isCrossOrigin().
     if (method !== 'GET' && method !== 'HEAD' && isCrossOrigin(req)) {

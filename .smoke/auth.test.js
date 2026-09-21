@@ -144,6 +144,80 @@ async function bootServer(env) {
       headers: { Origin: `http://127.0.0.1:${server.port}` }
     });
     check('the page\u2019s own origin still signs in normally', sameOrigin.status === 302, `status ${sameOrigin.status}`);
+
+    // -----------------------------------------------------------------------
+    // THE REAL BROWSER, byte for byte.
+    //
+    // Sign-in was impossible from a real browser for two independent reasons,
+    // both invisible to every other test in this file because they all set
+    // `Origin` and post JSON by hand:
+    //
+    //   1. The response carried `Referrer-Policy: no-referrer`, and the Fetch
+    //      standard rewrites the `Origin` header to the literal "null" on any
+    //      non-CORS request from such a document. A native form POST is exactly
+    //      that, so the browser sent `Origin: null` and the CSRF guard refused
+    //      the console's own login form.
+    //   2. That form sends `application/x-www-form-urlencoded`, and the body
+    //      parser only accepted JSON — so even past the guard it would have
+    //      answered 500 "Invalid JSON body".
+    //
+    // What follows is the request Chrome/Firefox actually sends.
+    // -----------------------------------------------------------------------
+    const formHeaders = {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+      'Sec-Fetch-Site': 'same-origin',
+      'Sec-Fetch-Mode': 'navigate',
+      'Sec-Fetch-Dest': 'document',
+      Origin: 'null'            // what `no-referrer` used to produce
+    };
+    const browserForm = await request(server.port, {
+      method: 'POST', path: '/login', body: 'token=' + encodeURIComponent(TOKEN), headers: formHeaders
+    });
+    check('a browser form POST with a NULL origin signs in', browserForm.status === 302,
+      `status ${browserForm.status}`);
+    check('and it issues the session cookie',
+      /hama_session=/.test(String((browserForm.headers['set-cookie'] || [])[0] || '')));
+    check('the form body is parsed as a form, not as JSON',
+      !/Invalid JSON/.test(browserForm.text), browserForm.text.slice(0, 60));
+
+    // The regression guard for the root cause: the policy must not be no-referrer.
+    const loginPage = await request(server.port, { path: '/login' });
+    check('the sign-in page does not set Referrer-Policy: no-referrer (which nulls Origin)',
+      String(loginPage.headers['referrer-policy'] || '') === 'same-origin',
+      'Referrer-Policy: ' + (loginPage.headers['referrer-policy'] || '(none)'));
+
+    // A wrong token through the real form is still refused, as a page.
+    const browserFormWrong = await request(server.port, {
+      method: 'POST', path: '/login', body: 'token=nope', headers: formHeaders
+    });
+    check('the browser form still refuses a wrong token',
+      browserFormWrong.status === 401 && /not correct/.test(browserFormWrong.text),
+      `status ${browserFormWrong.status}`);
+
+    // Cross-site must stay blocked, including the sandboxed case that sends null.
+    const crossSite = await request(server.port, {
+      method: 'POST', path: '/login', body: 'token=' + encodeURIComponent(TOKEN),
+      headers: { ...formHeaders, Origin: 'https://evil.example', 'Sec-Fetch-Site': 'cross-site' }
+    });
+    check('a cross-site form POST is still refused',
+      crossSite.status === 403 && !/hama_session/.test(String(crossSite.headers['set-cookie'] || '')),
+      `status ${crossSite.status}`);
+
+    const sandboxed = await request(server.port, {
+      method: 'POST', path: '/login', body: 'token=' + encodeURIComponent(TOKEN),
+      headers: { ...formHeaders, Origin: 'null', 'Sec-Fetch-Site': 'cross-site' }
+    });
+    check('an attacker\u2019s sandboxed frame (null origin, cross-site) is still refused',
+      sandboxed.status === 403, `status ${sandboxed.status}`);
+
+    // A stale browser that sends no Sec-Fetch metadata still works by Origin.
+    const legacyBrowser = await request(server.port, {
+      method: 'POST', path: '/login', body: 'token=' + encodeURIComponent(TOKEN),
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded', Accept: 'text/html', Origin: `http://127.0.0.1:${server.port}` }
+    });
+    check('a browser with no Sec-Fetch headers still signs in by Origin',
+      legacyBrowser.status === 302, `status ${legacyBrowser.status}`);
   }
 
   // -------------------------------------------------------------------------
