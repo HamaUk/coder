@@ -46,16 +46,24 @@ services:
         sync: false
 
       # ---------------------------------------------------------------------
-      # Optional: a provider that is re-created on every boot.
+      # A provider that is re-created on every boot.
       #
-      # Only needed because the free plan has no disk. Leave these commented out
-      # if you would rather add your provider in the UI each time.
+      # Needed because the free plan has no disk: without this, the provider you
+      # add in the UI is gone after every sleep, redeploy and restart, and the
+      # console silently falls back to the built-in no-key engine.
+      #
+      # HAMA_PROVIDER_KEY is `sync: false`, so Render PROMPTS for it and it is
+      # never stored in this file or in git. On the next Blueprint sync you will
+      # be asked for it — paste your OpenRouter key there.
       # ---------------------------------------------------------------------
-      # - key: HAMA_PROVIDER_PRESET      # openrouter | openai | groq | deepseek | google | anthropic …
-      #   value: openrouter
-      # - key: HAMA_PROVIDER_KEY         # sync:false keeps the key out of git; Render prompts for it
-      #   sync: false
-      # - key: HAMA_PROVIDER_MODEL       # defaults to the preset's model
-      #   value: openai/gpt-4o-mini
-      # - key: HAMA_PROVIDER_BASE_URL    # only for a custom/OpenAI-compatible endpoint
-      #   value: https://openrouter.ai/api/v1
+      - key: HAMA_PROVIDER_PRESET
+        value: openrouter
+      - key: HAMA_PROVIDER_KEY
+        sync: false
+      # Optional: defaults to the preset's model (openai/gpt-4o-mini — cheap and
+      # competent). Use a stronger one for real coding work, e.g.
+      # anthropic/claude-sonnet-4, openai/gpt-5, deepseek/deepseek-chat.
+      # - key: HAMA_PROVIDER_MODEL
+      #   value: anthropic/claude-sonnet-4
+      # - key: HAMA_PROVIDER_NAME
+      #   value: OpenRouter
